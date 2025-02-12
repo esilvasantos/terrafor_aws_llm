@@ -1,0 +1,19 @@
+Para lançar
+gunicorn -w 4 -b 0.0.0.0:5001 wsgi:app
+
+
+
+
+projeto/
+│
+├── app/
+│   ├── __init__.py
+│   ├── routes.py
+│   ├── database.py
+│   ├── llm.py
+│   └── templates/
+│       └── index.html
+│
+├── config.py
+├── wsgi.py
+└── requirements.txt

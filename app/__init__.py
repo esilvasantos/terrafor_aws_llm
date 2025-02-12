@@ -1,0 +1,9 @@
+from flask import Flask
+import logging
+import os
+
+template_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), 'templates'))
+app = Flask(__name__, template_folder=template_dir)
+logging.basicConfig(level=logging.DEBUG)
+
+from app import routes
