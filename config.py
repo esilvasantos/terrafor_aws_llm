@@ -1,8 +1,8 @@
 class Config:
     DB_PARAMS = {
-        "dbname": "dsadb",
-        "user": "dsa",
-        "password": "dsa1010",
+        "dbname": "",
+        "user": "",
+        "password": "",
         "host": "localhost",
         "port": "5432"
     }
