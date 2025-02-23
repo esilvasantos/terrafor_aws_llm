@@ -126,7 +126,7 @@ def analyze_table():
         
         stats, formatted_output = Database.get_table_statistics(schema, table)
         
-        # Garantir que a saída formatada seja uma string
+        # Ensure the formatted output is a string
         if not isinstance(formatted_output, str):
             formatted_output = str(formatted_output)
             
@@ -152,45 +152,127 @@ def index():
 def generate_schema_summary(schema_info):
     start_time = time.time()
     
-    schema_details = []
+    
+    tables = {}
     for info in schema_info:
-        schema_details.append(
-            f"Table: {info[0]}\n"
-            f"  Column: {info[1]}\n"
-            f"  Type: {info[2]}\n"
-            f"  Default: {info[3]}\n"
-            f"  Nullable: {info[4]}\n"
-        )
+        table_name = info[0]
+        if table_name not in tables:
+            tables[table_name] = []
+        tables[table_name].append({
+            'column': info[1],
+            'type': info[2],
+            'default': info[3],
+            'nullable': info[4]
+        })
+
     
+    schema_details = []
+    for table, columns in tables.items():
+        schema_details.append(f"Table: {table}")
+        for col in columns:
+            schema_details.append(
+                f"  Column: {col['column']}\n"
+                f"  Type: {col['type']}\n"
+                f"  Default: {col['default']}\n"
+                f"  Nullable: {col['nullable']}\n"
+            )
+
     schema_str = "\n".join(schema_details)
-    
+
     prompt = f"""
-    Analyze this database schema and provide a comprehensive summary.
+    Analyze this database schema and provide a detailed technical summary.
     Format the output exactly as follows, with clear sections:
-    
-    1. Total Number of Tables
-    2. Key Tables and Their Purposes
-    3. Important Relationships Between Tables
-    4. Notable Data Types Used
-    5. Potential Design Patterns Observed
-    6. Additional Observations
-    
+
+    1. Schema Overview
+       - Total number of tables
+       - Schema complexity assessment
+       - Overall architecture pattern (e.g., star schema, snowflake, etc.)
+
+    2. Table Analysis
+       - Key tables and their primary functions
+       - Table relationships and dependencies
+       - Potential bottlenecks or design concerns
+
+    3. Data Structure Analysis
+       - Primary key strategy
+       - Foreign key relationships
+       - Indexing patterns
+       - Common data types used
+
+    4. Security and Integrity
+       - NULL constraints analysis
+       - Default values patterns
+       - Data validation rules
+       - Potential security considerations
+
+    5. Performance Considerations
+       - Tables that might need optimization
+       - Potential query performance issues
+       - Suggestions for indexing
+       - Data volume considerations
+
+    6. Schema Best Practices
+       - Adherence to naming conventions
+       - Normalization assessment
+       - Redundancy analysis
+       - Improvement suggestions
+
+    7. Business Logic Insights
+       - Core business entities identified
+       - Critical business processes supported
+       - Data flow patterns
+       - Integration points
+
+    8. Maintenance and Scalability
+       - Schema flexibility assessment
+       - Future growth considerations
+       - Potential maintenance challenges
+       - Backup and recovery implications
+
     Schema details:
     {schema_str}
-    """
     
+    Provide specific examples and detailed explanations for each section.
+    Highlight both strengths and potential areas for improvement.
+    """
+
     response = LLM.ask_ollama(prompt)
     execution_time = time.time() - start_time
+
     
+    table_stats = f"""
+    DETAILED STATISTICS
+    ==================
+    Total Tables: {len(tables)}
+    Total Columns: {sum(len(cols) for cols in tables.values())}
+    Average Columns per Table: {sum(len(cols) for cols in tables.values()) / len(tables):.2f}
+    Tables with Primary Keys: {sum(1 for cols in tables.values() if any('primary key' in str(col).lower() for col in cols))}
+    Nullable Columns: {sum(1 for cols in tables.values() for col in cols if col['nullable'] == 'YES')}
+    """
+
     formatted_output = [
-        "SCHEMA SUMMARY",
+        "DATABASE SCHEMA ANALYSIS REPORT",
+        "=" * 80,
+        "",
+        table_stats,
+        "",
+        "DETAILED ANALYSIS",
         "=" * 80,
         "",
         response.strip(),
         "",
         "-" * 80,
-        f"Execution Time: {execution_time:.2f} seconds",
+        f"Analysis completed in {execution_time:.2f} seconds",
+        "",
+        "RECOMMENDATIONS",
+        "=" * 80,
+        "1. Performance Optimization Suggestions",
+        "2. Security Enhancement Recommendations",
+        "3. Data Integrity Improvement Points",
+        "4. Scaling Considerations",
+        "",
+        "Note: This analysis is based on schema structure only. Actual data patterns may affect these recommendations.",
         "=" * 80
     ]
-    
+
     return "\n".join(formatted_output)
